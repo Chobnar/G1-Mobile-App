@@ -57,20 +57,57 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 View v = convertView;
-                if (v == null) v = getLayoutInflater().inflate(R.layout.shopping_list_row, parent, false);
+                if (v == null) {
+                    v = getLayoutInflater().inflate(R.layout.shopping_list_row, parent, false);
+                }
+
                 TextView name = v.findViewById(R.id.listName);
                 ImageButton del = v.findViewById(R.id.btnDelete);
+                ImageButton reorder = v.findViewById(R.id.btnReorder);
+
                 final int pos = position;
-                ShoppingList sl = getItem(pos);
-                name.setText(sl.name);
+                ShoppingList original = getItem(pos);
+
+
+                // show list name + number of items
+                int count = (original.items == null) ? 0 : original.items.size();
+
+                if (count == 0) {
+                    name.setText(original.name + " (empty)");
+                } else if (count == 1) {
+                    name.setText(original.name + " (1 item)");
+                } else {
+                    name.setText(original.name + " (" + count + " items)");
+                }
+
+
+                // DELETE this list
                 del.setOnClickListener(btn -> {
                     lists.remove(pos);
                     notifyDataSetChanged();
                     ListStorage.save(MainActivity.this, lists);
                 });
+
+                // REORDER: duplicate this list
+                reorder.setOnClickListener(btn -> {
+                    // new name for the reordered list
+                    String newName = original.name + " (reorder)";
+                    ShoppingList copy = new ShoppingList(newName);
+
+                    // copy all item strings from original to copy
+                    copy.items.addAll(original.items);
+
+                    // add new list at top (use lists.size() to add at bottom)
+                    lists.add(0, copy);
+
+                    notifyDataSetChanged();
+                    ListStorage.save(MainActivity.this, lists);
+                });
+
                 return v;
             }
         };
+
         lv.setAdapter(adapter);
     }
 }
